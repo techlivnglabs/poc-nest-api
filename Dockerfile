@@ -2,7 +2,6 @@ FROM node:18-alpine
 
 WORKDIR /home/node/app
 
-
 COPY . .
 COPY .env.production .env
 RUN rm -rf .env.production
