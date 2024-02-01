@@ -1,25 +1,42 @@
 import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class UsersService {
-  users: { userId: number; username: string; password: string }[];
+  users: { userId: number; email: string; password: string }[];
 
   constructor() {
     this.users = [
       {
         userId: 1,
-        username: 'john',
+        email: 'john',
         password: 'changeme',
       },
       {
         userId: 2,
-        username: 'maria',
+        email: 'maria',
         password: 'guess',
       },
     ];
   }
 
-  async findOne(username) {
-    return this.users.find((user) => user.username === username);
+  async findAll() {
+    return this.users;
+  }
+
+  async findOne(email: string) {
+    return this.users.find((user) => user.email === email);
+  }
+
+  async create(email: string, password: string) {
+    const user = {
+      userId: Math.random() * 3,
+      email,
+      password,
+    };
+
+    this.users.push(user);
+
+    return user;
   }
 }

@@ -6,12 +6,14 @@ import { AuthController } from './auth.controller';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth.guard';
 
+const secret = process.env.AUTH_SECRET;
+
 @Module({
   imports: [
     UsersModule,
     JwtModule.register({
       global: true,
-      secret: process.env.AUTH_SECRET,
+      secret,
       signOptions: { expiresIn: '60s' },
     }),
   ],

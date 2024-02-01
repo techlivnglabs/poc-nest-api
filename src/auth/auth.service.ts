@@ -1,6 +1,12 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -9,17 +15,46 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signIn(
-    username: string,
-    pass: string,
-  ): Promise<{ access_token: string }> {
-    const user = await this.usersService.findOne(username);
-    if (user?.password !== pass) {
+  async signIn(email: string, password: string): Promise<{ token: string }> {
+    const user = await this.usersService.findOne(email);
+
+    if (!user) {
+      throw new NotFoundException('User does not exist in database.');
+    }
+
+    const isSamePassword = await bcrypt.compare(password, user.password);
+
+    if (!isSamePassword) {
       throw new UnauthorizedException();
     }
-    const payload = { sub: user.userId, username: user.username };
+
+    const payload = { sub: user.userId, email: user.email };
+    const token = await this.jwtService.signAsync(payload, {
+      secret: process.env.AUTH_SECRET,
+    });
+
     return {
-      access_token: await this.jwtService.signAsync(payload),
+      token,
     };
+  }
+
+  async register(email: string, password: string) {
+    const user = await this.usersService.findOne(email);
+
+    if (user) {
+      throw new BadRequestException('User already exist in database');
+    }
+
+    const hashPassword = await bcrypt.hash(password, 12);
+
+    const savedUser = await this.usersService.create(email, hashPassword);
+
+    const payload = { sub: savedUser.userId, email };
+
+    const token = await this.jwtService.signAsync(payload, {
+      secret: process.env.AUTH_SECRET,
+    });
+
+    return { token };
   }
 }

@@ -10,15 +10,21 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
+import { Public } from './decorators';
 
+@Public()
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @HttpCode(HttpStatus.OK)
   @Post('login')
-  signIn(@Body() signInDto: Record<string, any>) {
-    return this.authService.signIn(signInDto.username, signInDto.password);
+  async signIn(@Body() signInDto: { email: string; password: string }) {
+    return await this.authService.signIn(signInDto.email, signInDto.password);
+  }
+
+  @Post('register')
+  async register(@Body() signInDto: { email: string; password: string }) {
+    return await this.authService.register(signInDto.email, signInDto.password);
   }
 
   @UseGuards(AuthGuard)
